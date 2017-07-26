@@ -1,24 +1,42 @@
-import { createStore } from "redux";
+import { applyMiddleware, createStore } from "redux";
 
-const reducer = function(state, action) {
-  if (action.type === "INC") {
-    return state + action.payload;
-  }
-  if (action.type === "DEC") {
-    return state - action.payload;
+const reducer = (state = 0, action) => {
+  switch (action.type) {
+    case "DEC":
+      return state - 1;
+    case "INC":
+      return state + 1;
+    case "E":
+      throw new Error("ahh");
   }
   return state;
 }
 
-const store = createStore(reducer, 0);
+const logger = (store) => (next) => (action) => {
+  console.log("action fired", action);
+  next(action);
+}
+
+const error = (store) => (next) => (action) => {
+  try {
+    next(action);
+  } catch(e) {
+    console.log("oh noes", e);
+  }
+}
+
+const middleware = applyMiddleware(logger);
+
+const store = createStore(reducer, 1, middleware);
 
 store.subscribe(() => {
-  console.log("store changed", store.getState());
+  console.log("store changed", store.getState())
 })
 
-store.dispatch({type: "INC", payload: 1});
-store.dispatch({type: "INC", payload: 5});
-store.dispatch({type: "DEC", payload: 8});
-store.dispatch({type: "INC", payload: 235});
-store.dispatch({type: "INC", payload: 1});
-store.dispatch({type: "DEC", payload: 1666});
+store.dispatch({type: "INC"});
+store.dispatch({type: "INC"});
+store.dispatch({type: "INC"});
+store.dispatch({type: "DEC"});
+store.dispatch({type: "INC"});
+store.dispatch({type: "DEC"});
+store.dispatch({type: "E"});
